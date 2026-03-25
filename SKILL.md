@@ -211,13 +211,46 @@ After completing on-chain RPC verification, cross-reference findings with the [A
 
 **Integration:** Use OTF as a SECOND OPINION after your RPC verification. If OTF and your on-chain findings disagree, investigate the discrepancy. OTF may know about governance structures (offchain voting, legal entities) that aren't visible on-chain.
 
-### 3.5.8 Historical Precedents (Why This Matters)
+### 3.5.8 Mint Rate Limit Verification
+
+Even with proper multisig governance, check if privileged minting functions have rate limits configured. A protocol may have a mint rate limit function in the contract but configure it to allow infinite minting — rendering the safety mechanism useless.
+
+**What to check:**
+```bash
+# Check if the token contract has rate limit functions
+cast call <TOKEN_ADDRESS> "mintRateLimit()(uint256)" --rpc-url <RPC_URL>
+cast call <TOKEN_ADDRESS> "mintCap()(uint256)" --rpc-url <RPC_URL>
+cast call <TOKEN_ADDRESS> "maxMintAmount()(uint256)" --rpc-url <RPC_URL>
+
+# Check if there's a per-block or per-period limit
+cast call <TOKEN_ADDRESS> "mintPerBlock()(uint256)" --rpc-url <RPC_URL>
+cast call <TOKEN_ADDRESS> "mintingLimit()(uint256)" --rpc-url <RPC_URL>
+
+# For Aave-style protocols, check supply caps
+cast call <POOL_CONFIGURATOR> "getReserveCaps(address)(uint256,uint256)" <ASSET> --rpc-url <RPC_URL>
+```
+
+**Red flags:**
+- Rate limit function exists but is set to `type(uint256).max` or 0 (disabled)
+- No rate limit function at all on mintable tokens
+- Rate limit can be changed by same role that can mint (defeats the purpose)
+- Rate limit set unreasonably high relative to TVL (e.g., rate limit > 10x current supply)
+
+**Why this matters:**
+If a privileged key is compromised (even from a multisig via social engineering or key extraction), a single transaction can mint unlimited tokens if there's no rate limit. A properly configured rate limit bounds the damage: even with a compromised key, the attacker can only mint X tokens per period. This buys time for detection and response.
+
+The ideal setup: rate limit set to a reasonable multiple of expected daily minting, controlled by a DIFFERENT role than the minter, with a timelock on changes.
+
+**Precedent:** ermin (Oct 2025) publicly called out a protocol whose mint rate limit function existed but was configured to allow infinite mint. The safety mechanism was there but turned off.
+
+### 3.5.9 Historical Precedents (Why This Matters)
 - **Resolv (March 2026):** $80M exploit via compromised EOA admin key that could infinite-mint their stablecoin
 - **Gauntlet (March 2026):** Single EOA can unilaterally withdraw all funds from USD Alpha vault
 - **Frax:** Timelock admin is a bare EOA — single key controls all governance
 - **Fluid/Instadapp Arbitrum:** Proxy admin owner is EOA — can upgrade the entire Liquidity contract
 - **EtherFi L2:** Mainnet has timelock, but L2 tokens upgradeable by multisig with NO timelock (caught by OTF cross-reference)
 - **Camelot:** V4 factory owner is bare EOA, V3 is only 2/3 Safe — below minimum threshold
+- **Infinite mint configs (Oct 2025):** Protocol had mint rate limit function but configured it to allow infinite mint — the safety mechanism existed but was disabled
 
 ---
 
