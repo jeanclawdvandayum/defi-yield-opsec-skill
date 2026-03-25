@@ -211,7 +211,31 @@ After completing on-chain RPC verification, cross-reference findings with the [A
 
 **Integration:** Use OTF as a SECOND OPINION after your RPC verification. If OTF and your on-chain findings disagree, investigate the discrepancy. OTF may know about governance structures (offchain voting, legal entities) that aren't visible on-chain.
 
-### 3.5.8 Mint Rate Limit Verification
+### 3.5.8 Verify CURRENT State, Not Historical
+
+**CRITICAL LESSON:** Always query the contract's CURRENT admin/owner by calling the function directly on the live contract. Never rely on:
+- Etherscan transaction history (may show old deployer, not current admin)
+- Documentation references to addresses (may be outdated)
+- GitHub deployment files (may reference constructor args, not current state)
+- Block explorer labels (may be stale)
+
+**The correct approach:**
+```bash
+# ALWAYS call the contract directly for current state
+cast call <CONTRACT> "owner()(address)" --rpc-url <RPC>
+cast call <CONTRACT> "admin()(address)" --rpc-url <RPC>
+
+# Then verify THAT address, not whatever you found in docs
+```
+
+**Example of this going wrong:** Frax sfrxETH was initially flagged as REJECT because an address (`0x510B`) found in historical references appeared to be an EOA controlling the timelock. The ACTUAL current timelock admin (verified by calling `admin()` on the timelock contract) is a 3/5 Safe multisig (`0xB1748C`). The EOA was a deprecated admin that had been replaced. Querying the live contract state would have caught this immediately.
+
+**Verification order:**
+1. Call the contract function directly (`owner()`, `admin()`, etc.)
+2. THEN verify the returned address (Safe? EOA? Timelock?)
+3. Do NOT start by searching for addresses in docs/history and checking those
+
+### 3.5.9 Mint Rate Limit Verification
 
 Even with proper multisig governance, check if privileged minting functions have rate limits configured. A protocol may have a mint rate limit function in the contract but configure it to allow infinite minting — rendering the safety mechanism useless.
 
@@ -243,14 +267,14 @@ The ideal setup: rate limit set to a reasonable multiple of expected daily minti
 
 **Precedent:** ermin (Oct 2025) publicly called out a protocol whose mint rate limit function existed but was configured to allow infinite mint. The safety mechanism was there but turned off.
 
-### 3.5.9 Historical Precedents (Why This Matters)
+### 3.5.10 Historical Precedents (Why This Matters)
 - **Resolv (March 2026):** $80M exploit via compromised EOA admin key that could infinite-mint their stablecoin
-- **Gauntlet (March 2026):** Initially reported as single-EOA withdrawal; Gauntlet clarified it was a 3/8 multisig executing a scoped Merkle-tree-restricted OTC trade to replace illiquid Resolv exposure. No EOA has unilateral withdrawal rights from Aera vaults. Verify claims independently.
-- **Frax:** Timelock admin is a bare EOA — single key controls all governance
-- **Fluid/Instadapp Arbitrum:** Proxy admin owner is EOA — can upgrade the entire Liquidity contract
+- **Gauntlet (March 2026):** Initially reported as single-EOA withdrawal; Gauntlet clarified it was a 3/8 multisig executing a scoped Merkle-tree-restricted OTC trade. Verify claims independently before flagging.
+- **Frax (false positive, March 2026):** Initially flagged as REJECT because a historical address appeared to be an EOA controlling the timelock. Actual current admin (verified via `admin()` call) is a 3/5 Safe multisig with 48h timelock. **Lesson: always query current contract state, not historical references.**
+- **Fluid/Instadapp Arbitrum:** Proxy admin owner is EOA on Arbitrum but mainnet has proper timelock. Same protocol, different governance per chain.
 - **EtherFi L2:** Mainnet has timelock, but L2 tokens upgradeable by multisig with NO timelock (caught by OTF cross-reference)
 - **Camelot:** V4 factory owner is bare EOA, V3 is only 2/3 Safe — below minimum threshold
-- **Infinite mint configs (Oct 2025):** Protocol had mint rate limit function but configured it to allow infinite mint — the safety mechanism existed but was disabled
+- **Infinite mint configs (Oct 2025):** Protocol had mint rate limit function configured to allow infinite mint — safety mechanism existed but was disabled
 
 ---
 
