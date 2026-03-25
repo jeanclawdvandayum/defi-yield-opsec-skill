@@ -128,11 +128,29 @@ For EACH privileged role address, run these `cast` commands against a public RPC
 cast code <ADDRESS> --rpc-url <RPC_URL>
 # If returns "0x" → EOA. If returns bytecode → contract.
 
-# Step 2: If contract, is it a Safe multisig?
+# Step 2: If contract, check if it's a multisig (try ALL common patterns, not just Safe)
+
+# Safe/Gnosis multisig:
 cast call <ADDRESS> "getThreshold()(uint256)" --rpc-url <RPC_URL>
 cast call <ADDRESS> "getOwners()(address[])" --rpc-url <RPC_URL>
 
-# Step 3: If not Safe, is it a timelock?
+# Avocado multisig (Instadapp):
+cast call <ADDRESS> "requiredSigners()(uint256)" --rpc-url <RPC_URL>
+cast call <ADDRESS> "signersCount()(uint256)" --rpc-url <RPC_URL>
+cast call <ADDRESS> "signers()(address[])" --rpc-url <RPC_URL>
+
+# Generic multisig patterns:
+cast call <ADDRESS> "quorum()(uint256)" --rpc-url <RPC_URL>
+cast call <ADDRESS> "threshold()(uint256)" --rpc-url <RPC_URL>
+cast call <ADDRESS> "required()(uint256)" --rpc-url <RPC_URL>
+cast call <ADDRESS> "numConfirmationsRequired()(uint256)" --rpc-url <RPC_URL>
+
+# ⚠️ IMPORTANT: If Safe functions revert but the address HAS code, DO NOT
+# assume it's an EOA. It may be a non-Safe multisig. Try ALL patterns above.
+# Instadapp's Avocado multisig looks nothing like Safe but is functionally
+# equivalent. See: https://github.com/Instadapp/avocado-contracts-public
+
+# Step 3: If not a multisig, is it a timelock?
 cast call <ADDRESS> "getMinDelay()(uint256)" --rpc-url <RPC_URL>
 # or
 cast call <ADDRESS> "delay()(uint256)" --rpc-url <RPC_URL>
@@ -143,7 +161,7 @@ cast storage <PROXY_ADDRESS> 0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d
 # Step 5: For AccessControl contracts, check role holders
 cast call <CONTRACT> "getRoleMember(bytes32,uint256)(address)" <ROLE_HASH> 0 --rpc-url <RPC_URL>
 
-# Step 6: Verify Safe API for threshold details
+# Step 6: Verify Safe API for threshold details (only works for Safe multisigs)
 curl -s "https://safe-transaction-mainnet.safe.global/api/v1/safes/<ADDRESS>/"
 # For other chains: replace "mainnet" with "optimism", "arbitrum", etc.
 ```
@@ -271,7 +289,7 @@ The ideal setup: rate limit set to a reasonable multiple of expected daily minti
 - **Resolv (March 2026):** $80M exploit via compromised EOA admin key that could infinite-mint their stablecoin
 - **Gauntlet (March 2026):** Initially reported as single-EOA withdrawal; Gauntlet clarified it was a 3/8 multisig executing a scoped Merkle-tree-restricted OTC trade. Verify claims independently before flagging.
 - **Frax (false positive, March 2026):** Initially flagged as REJECT because a historical address appeared to be an EOA controlling the timelock. Actual current admin (verified via `admin()` call) is a 3/5 Safe multisig with 48h timelock. **Lesson: always query current contract state, not historical references.**
-- **Fluid/Instadapp Arbitrum:** Proxy admin owner is EOA on Arbitrum but mainnet has proper timelock. Same protocol, different governance per chain.
+- **Fluid/Instadapp (false positive, March 2026):** Proxy admin flagged as EOA-controlled because Safe-specific functions (`getThreshold`/`getOwners`) reverted. Actual admin is a 7/14 Avocado multisig (Instadapp's custom implementation). Correct functions: `requiredSigners()=7`, `signersCount()=14`. **Lesson: not all multisigs are Safe. When code exists but Safe functions revert, try alternative multisig interfaces before concluding EOA.**
 - **EtherFi L2:** Mainnet has timelock, but L2 tokens upgradeable by multisig with NO timelock (caught by OTF cross-reference)
 - **Camelot:** V4 factory owner is bare EOA, V3 is only 2/3 Safe — below minimum threshold
 - **Infinite mint configs (Oct 2025):** Protocol had mint rate limit function configured to allow infinite mint — safety mechanism existed but was disabled
