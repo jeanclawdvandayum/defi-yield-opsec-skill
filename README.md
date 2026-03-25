@@ -36,7 +36,7 @@ This is the differentiator. Most risk assessments trust documentation. This skil
 
 **Historical precedents that motivated this:**
 - Resolv (March 2026): $80M exploit via compromised EOA admin key
-- Gauntlet (March 2026): Single EOA can unilaterally withdraw all vault funds
+
 - Frax: Timelock admin is a bare EOA controlling all governance
 - Fluid/Instadapp: Mainnet has timelock, Arbitrum deployment has EOA proxy admin
 

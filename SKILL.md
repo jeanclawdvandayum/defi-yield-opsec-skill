@@ -245,7 +245,7 @@ The ideal setup: rate limit set to a reasonable multiple of expected daily minti
 
 ### 3.5.9 Historical Precedents (Why This Matters)
 - **Resolv (March 2026):** $80M exploit via compromised EOA admin key that could infinite-mint their stablecoin
-- **Gauntlet (March 2026):** Single EOA can unilaterally withdraw all funds from USD Alpha vault
+- **Gauntlet (March 2026):** Initially reported as single-EOA withdrawal; Gauntlet clarified it was a 3/8 multisig executing a scoped Merkle-tree-restricted OTC trade to replace illiquid Resolv exposure. No EOA has unilateral withdrawal rights from Aera vaults. Verify claims independently.
 - **Frax:** Timelock admin is a bare EOA — single key controls all governance
 - **Fluid/Instadapp Arbitrum:** Proxy admin owner is EOA — can upgrade the entire Liquidity contract
 - **EtherFi L2:** Mainnet has timelock, but L2 tokens upgradeable by multisig with NO timelock (caught by OTF cross-reference)
