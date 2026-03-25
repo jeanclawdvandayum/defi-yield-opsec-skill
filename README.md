@@ -78,3 +78,14 @@ The OpSec verification phase was developed after discovering that Frax's timeloc
 ## License
 
 MIT
+
+## Aragon OTF Integration
+
+The skill includes cross-referencing with [Aragon's Ownership Token Framework](https://otf.aragon.org/) (OTF) as a second opinion layer. OTF provides independent evidence-backed governance analysis that catches nuances pure RPC calls miss:
+
+- Offchain vs onchain voting (advisory governance vs binding)
+- L2 vs mainnet governance differences
+- Token distribution concentration
+- IP/trademark control
+
+This caught that EtherFi uses offchain Snapshot voting (not binding onchain governance) and that their L2 tokens are upgradeable with no timelock — details invisible to on-chain RPC queries alone.

@@ -188,11 +188,36 @@ For each protocol, produce a table:
 | guardian | 0x5678... | EOA | N/A | Pause only | ✅ PASS (pause-only) |
 | proxy admin | 0x9abc... | EOA | N/A | Upgrade implementation | ❌ FAIL |
 
-### 3.5.7 Historical Precedents (Why This Matters)
+### 3.5.7 Aragon OTF Cross-Reference
+
+After completing on-chain RPC verification, cross-reference findings with the [Aragon Ownership Token Framework](https://otf.aragon.org/) (OTF). OTF provides independent, evidence-backed governance analysis covering onchain control, value accrual, verifiability, and token distribution.
+
+**How to use:**
+1. Check if the protocol's governance token is covered at `https://otf.aragon.org/tokens/{symbol}`
+2. Currently covers: AAVE, AERO, CRV, LDO, UNI, YB, SKY, ETHFI (and growing)
+3. Compare OTF's governance classification against your RPC findings
+4. OTF catches nuances that RPC calls miss:
+   - **Offchain vs onchain voting** (e.g., EtherFi uses Snapshot + multisig, not binding onchain governance)
+   - **L2 vs mainnet governance differences** (e.g., EtherFi L2 tokens upgradeable with no timelock)
+   - **Token distribution concentration** (whale voting risk)
+   - **IP and trademark control** (who actually owns the protocol brand)
+   - **Value accrual mechanisms** (where fees flow)
+
+**Red flags from OTF:**
+- "Tokenholders do not have binding onchain control" — governance is advisory only, multisig can ignore votes
+- "Upgradeable by multisigs with no timelock" on L2 deployments — even if mainnet is timelocked
+- High insider allocation (>50% to team + investors) with unverified vesting
+- Trademark/IP held by company not controlled by tokenholders
+
+**Integration:** Use OTF as a SECOND OPINION after your RPC verification. If OTF and your on-chain findings disagree, investigate the discrepancy. OTF may know about governance structures (offchain voting, legal entities) that aren't visible on-chain.
+
+### 3.5.8 Historical Precedents (Why This Matters)
 - **Resolv (March 2026):** $80M exploit via compromised EOA admin key that could infinite-mint their stablecoin
 - **Gauntlet (March 2026):** Single EOA can unilaterally withdraw all funds from USD Alpha vault
 - **Frax:** Timelock admin is a bare EOA — single key controls all governance
 - **Fluid/Instadapp Arbitrum:** Proxy admin owner is EOA — can upgrade the entire Liquidity contract
+- **EtherFi L2:** Mainnet has timelock, but L2 tokens upgradeable by multisig with NO timelock (caught by OTF cross-reference)
+- **Camelot:** V4 factory owner is bare EOA, V3 is only 2/3 Safe — below minimum threshold
 
 ---
 
