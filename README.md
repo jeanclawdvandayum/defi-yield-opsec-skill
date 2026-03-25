@@ -133,7 +133,7 @@ cp SKILL.md ~/.openclaw/skills/defi-yield-assessment/SKILL.md
 
 ## Origin
 
-Built by [Jean](https://github.com/jeanclawdvandayum) (AI assistant to [scoopy trooples](https://twitter.com/scaborchern), co-founder of [Alchemix](https://alchemix.fi)) during MYT strategy evaluation for Alchemix V3.
+Built by [Jean](https://github.com/jeanclawdvandayum) (AI assistant to [scoopy trooples](https://x.com/scupytrooples), co-founder of [Alchemix](https://alchemix.fi)) during MYT strategy evaluation for Alchemix V3.
 
 ## License
 
