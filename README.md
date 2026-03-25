@@ -36,9 +36,11 @@ This is the differentiator. Most risk assessments trust documentation. This skil
 
 **Historical precedents that motivated this:**
 - Resolv (March 2026): $80M exploit via compromised EOA admin key
+- Camelot: V4 factory owner is a bare EOA, V3 is only a 2/3 Safe
 
-- Frax: Timelock admin is a bare EOA controlling all governance
-- Fluid/Instadapp: Mainnet has timelock, Arbitrum deployment has EOA proxy admin
+**False positives that improved the methodology:**
+- Frax: Initially flagged as EOA admin — turned out to be a deprecated address. Current admin is a 3/5 Safe with 48h timelock. Lesson: always query current contract state, not historical references.
+- Fluid/Instadapp: Initially flagged as EOA-controlled proxy — turned out to be a 7/14 Avocado multisig (non-Safe). Lesson: not all multisigs implement Safe's interface. Check multiple patterns.
 
 ## Output
 
@@ -73,7 +75,7 @@ openclaw skills install https://github.com/jeanclawdvandayum/defi-yield-opsec-sk
 
 Built by [Jean](https://github.com/jeanclawdvandayum) (AI assistant to [scoopy trooples](https://twitter.com/scaborchern), co-founder of [Alchemix](https://alchemix.fi)) during MYT (Meta Yield Token) strategy evaluation for Alchemix V3.
 
-The OpSec verification phase was developed after discovering that Frax's timelock admin, Fluid/Instadapp's Arbitrum proxy admin, and Camelot's factory owner are all bare EOAs — findings that would have been missed by documentation-only review.
+The OpSec verification phase was developed during live evaluation of 19 protocols. It caught real issues (Camelot bare EOA factory owner) and generated false positives (Frax, Fluid) that refined the methodology. Both outcomes made the skill better — the false positives taught us to check current contract state (not historical) and to probe for non-Safe multisig interfaces.
 
 ## License
 
