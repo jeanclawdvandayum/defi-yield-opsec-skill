@@ -147,8 +147,74 @@ cast call <ADDRESS> "numConfirmationsRequired()(uint256)" --rpc-url <RPC_URL>
 
 # ⚠️ IMPORTANT: If Safe functions revert but the address HAS code, DO NOT
 # assume it's an EOA. It may be a non-Safe multisig. Try ALL patterns above.
-# Instadapp's Avocado multisig looks nothing like Safe but is functionally
-# equivalent. See: https://github.com/Instadapp/avocado-contracts-public
+# Then try the comprehensive list below.
+
+# --- KNOWN MULTISIG / GOVERNANCE CONTRACT TYPES ---
+#
+# 1. Safe (Gnosis Safe) — most common (~80% of DeFi multisigs)
+#    Functions: getThreshold(), getOwners(), nonce()
+#    Proxy pattern: GnosisSafeProxy → GnosisSafe singleton
+#    Safe API: https://safe-transaction-{network}.safe.global/api/v1/safes/{addr}/
+#
+# 2. Avocado (Instadapp) — used by Fluid/Instadapp
+#    Functions: requiredSigners(), signersCount(), signers()
+#    Docs: https://docs.avocado.instadapp.io/
+#    Code: https://github.com/Instadapp/avocado-contracts-public
+#
+# 3. OpenZeppelin TimelockController — used by EtherFi, Gains, many others
+#    Functions: getMinDelay(), hasRole(PROPOSER_ROLE, addr), hasRole(EXECUTOR_ROLE, addr)
+#    TIMELOCK_ADMIN_ROLE, PROPOSER_ROLE, EXECUTOR_ROLE, CANCELLER_ROLE
+#    Self-administered pattern: hasRole(TIMELOCK_ADMIN, self) = true
+#
+# 4. Compound Timelock — used by older protocols, Frax
+#    Functions: admin(), delay(), pendingAdmin()
+#    queueTransaction(), executeTransaction(), cancelTransaction()
+#
+# 5. OpenZeppelin Governor (GovernorBravo-compatible) — used by Compound, Uniswap, etc.
+#    Functions: quorum(), proposalThreshold(), votingDelay(), votingPeriod()
+#    state(proposalId), propose(), castVote(), execute()
+#
+# 6. Aragon Voting — used by Curve, Lido
+#    Voting contract + Agent pattern (Agent executes approved proposals)
+#    Functions: minAcceptQuorumPct(), supportRequiredPct(), voteTime()
+#
+# 7. Aave Governance V3 — cross-chain executor pattern
+#    PayloadsController → Executor contracts per chain
+#    Functions: executeTransaction() on Executor (onlyOwner)
+#    Owner is the cross-chain governance bridge
+#
+# 8. Zodiac Modules (Safe ecosystem) — used by some DAOs
+#    Reality Module (Snapshot + oracle), Delay Module, Roles Module
+#    Functions: getModulesPaginated() on the Safe
+#
+# 9. Council (Element Finance) — used by Element/Delv
+#    Functions: getMembers(), quorum(), votingPeriod()
+#    On-chain voting by council members
+#
+# 10. Squads (Solana) — if checking Solana protocols
+#     Program-based multisig, different from EVM entirely
+#
+# 11. Custom AccessControl + role-based — used by Tokemak, many others
+#     Functions: getRoleMember(role, index), getRoleMemberCount(role)
+#     hasRole(role, account), DEFAULT_ADMIN_ROLE = bytes32(0)
+#
+# 12. DSProxy / DSAuth (MakerDAO legacy) — used by older MakerDAO deployments
+#     Functions: authority(), owner()
+#     DSAuth pattern: authority contract controls access
+#
+# 13. Fireblocks / institutional MPC — LOOKS like EOA on-chain
+#     No contract code. Appears as regular address.
+#     Cannot be distinguished from EOA via RPC alone.
+#     Ask the team directly. If they say "MPC" or "Fireblocks",
+#     probe: how many key shares? What threshold? What's the recovery process?
+#     MPC is NOT equivalent to multisig — key shares can be reconstituted.
+#
+# DETECTION STRATEGY when you find a contract that's not Safe:
+# 1. Check Etherscan "Read Contract" tab for function names
+# 2. Search the contract name in the source code
+# 3. Look for EIP-165 supportsInterface() calls
+# 4. Check if it's a well-known proxy pattern (implementation slot)
+# 5. Google the contract name + "multisig" or "governance"
 
 # Step 3: If not a multisig, is it a timelock?
 cast call <ADDRESS> "getMinDelay()(uint256)" --rpc-url <RPC_URL>
