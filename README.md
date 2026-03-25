@@ -111,7 +111,7 @@ This skill was developed during evaluation of 19 protocols for Alchemix V3's MYT
 
 **Real findings:**
 - Resolv (March 2026): $80M exploit via compromised EOA admin key
-- Camelot: V4 factory owner is a bare EOA
+- Camelot: V4 factory owner is a bare EOA with `setPlugin()` access on all live pools. Algebra V4 plugins hook into every swap and receive fee transfers. Single key can deploy malicious plugin logic on any existing pool.
 
 **False positives that improved the skill:**
 - Frax: Initially flagged because a historical address appeared to be an EOA controlling the timelock. Current admin (queried via `admin()`) is a 3/5 Safe with 48h timelock. **Lesson: always query current contract state.**
